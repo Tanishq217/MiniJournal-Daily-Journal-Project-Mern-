@@ -5,38 +5,29 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// Register
-router.post("/register", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
+router.post("/", async (req, res) => {
+  console.log("BODY RECEIVED:", req.body);
 
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ error: "User already exists" });
+  if (!req.body) return res.status(400).json({ error: "Request body missing" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashed });
+  const { userId, date, content } = req.body;
 
-    await user.save();
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (!date || !content) {
+    return res.status(400).json({ error: "date and content required" });
   }
-});
 
-// Login
-router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    const entry = new Entry({ userId, date, content });
+    await entry.save();
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(201).json({
+      id: entry._id,
+      date: entry.date,
+      content: entry.content
+    });
+  } catch (error) {
+    console.error("POST /entries ERROR:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
