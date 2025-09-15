@@ -1,11 +1,16 @@
-// routes/entries.js
 import express from "express";
 import Entry from "../models/Entry.js";
 
 const router = express.Router();
 
 // Create entry
+
+
+
+
+
 router.post("/", async (req, res) => {
+  
   try {
     const { userId, date, content } = req.body;
     if (!date || !content) return res.status(400).json({ error: "date and content required" });
