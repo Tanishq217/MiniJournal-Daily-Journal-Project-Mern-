@@ -4,55 +4,53 @@ import Entry from "../models/Entry.js";
 const router = express.Router();
 
 // Create entry
-
-
-
-
-
 router.post("/", async (req, res) => {
-  
   try {
     const { userId, date, content } = req.body;
-    if (!date || !content) return res.status(400).json({ error: "date and content required" });
+    if (!date || !content) {
+      return res.status(400).json({ error: "date and content required" });
+    }
 
     const entry = new Entry({ userId, date, content });
     await entry.save();
+
     res.status(201).json(entry);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Get all entries
+// Get all entries sorted by newest first
 router.get("/", async (req, res) => {
   try {
     const entries = await Entry.find().sort({ date: -1 });
     res.json(entries);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Update entry
+// Update an entry
 router.patch("/:id", async (req, res) => {
   try {
-    const updates = req.body;
-    const updated = await Entry.findByIdAndUpdate(req.params.id, updates, { new: true });
-    if (!updated) return res.status(404).json({ error: "Entry not found" });
-    res.json(updated);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const entry = await Entry.findByIdAndUpdate(
+      req.params.id,
+      { content: req.body.content },
+      { new: true }
+    );
+    res.json(entry);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Delete entry
+// Delete an entry
 router.delete("/:id", async (req, res) => {
   try {
-    const deleted = await Entry.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: "Entry not found" });
+    await Entry.findByIdAndDelete(req.params.id);
     res.json({ message: "Entry deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
